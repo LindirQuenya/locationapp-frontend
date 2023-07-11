@@ -36,7 +36,7 @@ async function authenticate() {
 }
 
 function getNameSelect(names) {
-  let builder = ['<select name="name" id="nameselect">'];
+  let builder = ['<select name="name" id="nameselect" class="select-internal">'];
   for (const name of names) {
     builder.push('<option value="');
     builder.push(name.replaceAll('"', '&quot;'));
@@ -93,7 +93,7 @@ function randomLocation() {
 }
 
 const select = document.createElement('div');
-select.className = 'ol-control ol-unselectable select';
+select.className = 'ol-control ol-selectable select';
 select.innerHTML = getNameSelect(names);
 
 map.addControl(
@@ -102,15 +102,16 @@ map.addControl(
   })
 );
 
-//document.getElementById("update-button").onclick = randomLocation;
-const update = document.createElement('div');
-update.className = 'ol-control ol-unselectable update';
-update.innerHTML = '<button title="Update Location">↻</button>';
-update.addEventListener('click', async function() {
+async function onUpdateButton() {
   const sel = document.getElementById("nameselect");
   const location = await getLocation(sel.options[sel.selectedIndex].text);
   updateLocation(location.latitude, location.longitude, location.accuracy);
-});
+}
+
+const update = document.createElement('div');
+update.className = 'ol-control ol-unselectable update';
+update.innerHTML = '<button title="Update Location">↻</button>';
+update.addEventListener('click', onUpdateButton);
 
 map.addControl(
   new Control({
@@ -118,22 +119,28 @@ map.addControl(
   })
 );
 
-const locate = document.createElement('div');
-locate.className = 'ol-control ol-unselectable locate';
-locate.innerHTML = '<button title="Locate me">◎</button>';
-locate.addEventListener('click', function () {
+function zoomIn() {
   if (!source.isEmpty()) {
     map.getView().fit(source.getExtent(), {
       maxZoom: 18,
       duration: 500,
     });
   }
-});
+}
+const locate = document.createElement('div');
+locate.className = 'ol-control ol-unselectable locate';
+locate.innerHTML = '<button title="Locate me">◎</button>';
+locate.addEventListener('click', zoomIn);
+
 map.addControl(
   new Control({
     element: locate,
   })
 );
+
+// Fetch an initial location.
+await onUpdateButton();
+zoomIn();
 }
 
 main();
