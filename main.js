@@ -9,8 +9,8 @@ import Point from 'ol/geom/Point';
 import {circular} from 'ol/geom/Polygon';
 import Control from 'ol/control/Control';
 
-async function getLocation(name) {
-  const query = new URLSearchParams({name: name}).toString();
+async function getLocation(id) {
+  const query = new URLSearchParams({id: id}).toString();
   const response = await fetch("https://eldamar.duckdns.org/api/location/get?" + query);
   if (!response.ok) {
     return null;
@@ -35,13 +35,13 @@ async function authenticate() {
   window.location.replace(url);
 }
 
-function getNameSelect(names) {
+function getNameSelect(ids_names) {
   let builder = ['<select name="name" id="nameselect" class="select-internal">'];
-  for (const name of names) {
+  for (const pair of ids_names) {
     builder.push('<option value="');
-    builder.push(name.replaceAll('"', '&quot;'));
+    builder.push(pair[0].toString());
     builder.push('">');
-    builder.push(name);
+    builder.push(pair[1]);
     builder.push('</option>');
   }
   builder.push('</select>');
@@ -49,8 +49,8 @@ function getNameSelect(names) {
 }
 
 async function main() {
-let names = await listNames();
-if (names === null) {
+let ids_names = await listNames();
+if (ids_names === null) {
   await authenticate();
 }
 
@@ -94,7 +94,7 @@ function randomLocation() {
 
 const select = document.createElement('div');
 select.className = 'ol-control ol-selectable select';
-select.innerHTML = getNameSelect(names);
+select.innerHTML = getNameSelect(ids_names);
 
 map.addControl(
   new Control({
@@ -104,7 +104,7 @@ map.addControl(
 
 async function onUpdateButton() {
   const sel = document.getElementById("nameselect");
-  const location = await getLocation(sel.options[sel.selectedIndex].text);
+  const location = await getLocation(parseInt(sel.options[sel.selectedIndex].value));
   updateLocation(location.latitude, location.longitude, location.accuracy);
 }
 
